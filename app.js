@@ -6,6 +6,12 @@ const rateLimiter = require('express-rate-limit');
 const mongoSanitize = require('express-mongo-sanitize');
 const xss = require('xss-clean');
 
+//1.1 routes
+const userRouter = require('./routes/userRoutes');
+
+//1.2 Controllers
+const errorController = require('./controllers/errorController');
+
 //2 const variables
 const app = express();
 
@@ -16,11 +22,12 @@ if (process.env.NODE_ENV === 'development') {
     app.use(morgan('dev'));
     app.use((req, res, next) => {
         req.requestTime = new Date().toISOString();
+        next();
     });
 }
 
 //midleware to secure the express app
-app.use(helmet);
+app.use(helmet());
 
 //Limit requests from same IP
 const limiter = rateLimiter({
@@ -40,6 +47,9 @@ app.use(mongoSanitize());
 app.use(xss());
 
 //4 Routes
+app.use('/api/v1/users', userRouter);
+
+app.use(errorController);
 
 
 module.exports = app;
