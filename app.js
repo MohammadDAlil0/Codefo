@@ -8,6 +8,7 @@ const xss = require('xss-clean');
 
 //1.1 routes
 const userRouter = require('./routes/userRoutes');
+const problemRouter = require('./routes/problemRoutes');
 
 //1.2 Controllers
 const errorController = require('./controllers/errorController');
@@ -48,6 +49,7 @@ app.use(xss());
 
 //4 Routes
 app.use('/api/v1/users', userRouter);
+app.use('/api/v1/problems', problemRouter);
 
 app.use(errorController);
 

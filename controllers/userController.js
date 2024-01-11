@@ -3,10 +3,48 @@ const User = require('../models/userModel');
 const catchAsync = require('../utils/catchAsync');
 const AppError = require('../utils/appErorr');
 
-exports.getUser = factory.getOne(User);
-exports.getAllUsers = factory.getAll(User);
+exports.getMe = factory.getOne(User);
 exports.updateUser = factory.updateOne(User);
 exports.deleteUser = factory.deleteOne(User);
+
+exports.idToParams = (req, res, next) => {
+    req.params.id = req.user.id;
+    next();
+}
+
+exports.validateUpdateUserInput = (req, res, next) => {
+    req.body = {
+        name: req.body.name,
+        picture: req.body.picture,
+        brief: req.body.brief,
+        email: req.body.email,
+        socialMediaAccounts: req.body.socialMediaAccounts
+    };
+    next();
+}
+
+exports.getAllUsers = catchAsync(async (req, res, next) => {
+    const users = await User.find();
+    users.forEach(user => user.folders = undefined);
+    res.status(200).json({
+        status: 'success',
+        result: users.length,
+        data: users
+    });
+});
+
+exports.getUser = catchAsync(async (req, res, next) => {
+    const doc = await User.findOne({handle: req.params.handle});
+    if (!doc) {
+        return next(new AppError('No document found with that ID', 404));
+    }   
+    doc.folders = doc.folders.filter(f => f.visibilty);
+    
+    res.status(200).json({
+        status: 'success',
+        data: doc
+    });
+});
 
 exports.addFolder = catchAsync(async (req, res, next) => {
     const doc = {

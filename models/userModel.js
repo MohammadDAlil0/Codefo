@@ -91,6 +91,18 @@ userSchema.pre(/^find/, function(next) {
     next();
 });
 
+/*
+userSchema.post('find', function(docs, next) {
+    if (Array.isArray(docs)) {
+        docs.forEach(user => {
+            if (user.folders.length) {
+                user.folders = user.folders.filter(el => el.visibilty);
+            }
+        });
+    }
+    next();
+});
+*/
 
 
 module.exports = mongoose.model('User', userSchema);
