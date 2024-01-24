@@ -19,7 +19,7 @@ router.route('/me')
 .delete(userController.idToParams, userController.deleteUser);
 
 router.post('/folder', userController.addFolder);
-router.patch('/folder/:folderId', userController.editFolder);
+router.patch('/folder', userController.editFolder);
 
 router.put('/addFriend/:friendId', userController.addFriend);
 router.delete('/deleteFriend/:friendId', userController.deleteFriend);

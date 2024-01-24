@@ -22,7 +22,11 @@ const problemSchema = new mongoose.Schema({
     },
     folderName: {
         type: String,
-        required: 'A problem must belongs to a folder'
+        required: [true, 'A problem must belongs to a folder']
+    },
+    folderVisibilty: {
+        type: Boolean,
+        required: [true, 'A problem\'s folder must have a visibilty']
     },
     votes: [{
         type: mongoose.Types.ObjectId,

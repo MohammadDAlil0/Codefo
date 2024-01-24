@@ -1,5 +1,6 @@
 const factory = require('./handleFactory');
 const User = require('../models/userModel');
+const Problem = require('../models/problemModel');
 const catchAsync = require('../utils/catchAsync');
 const AppError = require('../utils/appErorr');
 
@@ -70,12 +71,12 @@ exports.addFolder = catchAsync(async (req, res, next) => {
 });
 
 exports.editFolder = catchAsync(async (req, res, next) => {
-    const folderId = req.params.folderId;
-    const {name, visibilty} = req.body;
+    const {oldName, name, visibilty} = req.body;
     if (!name) {
         return next(new AppError('A folder must have a name'), 400);
     }
-    const newUser = await User.findOneAndUpdate({_id: req.user.id, 'folders._id': folderId}, {
+    
+    const newUser = await User.findOneAndUpdate({_id: req.user.id, 'folders.name': oldName}, {
         $set: {'folders.$': {name, visibilty}}
     }, {
         new: true,
@@ -85,6 +86,10 @@ exports.editFolder = catchAsync(async (req, res, next) => {
     if(!newUser) {
         return next(new AppError('there is no such folder belongs to the user!', 404));
     }
+
+    await Problem.updateMany({userId: req.user.id, folderName: oldName}, {
+        $set: {folderName: name, folderVisibilty: visibilty}
+    });
 
     res.status(200).json({
         status: 'success',

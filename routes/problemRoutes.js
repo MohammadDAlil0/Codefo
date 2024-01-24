@@ -5,15 +5,16 @@ const authController = require('../controllers/authControlller');
 
 const router = express.Router();
 
+router.get('/getUserProblems/:userId', problemController.getUserProblems)
 
-router.route('/')
-.get(problemController.getAllProblems)
-.post(authController.protect, problemController.editProblemInput, problemController.createProblem);
+router.route('/me/')
+.post(authController.protect, problemController.editProblemInput, problemController.createProblem)
+.get(authController.protect, problemController.getMyProblems);
 
 router.route('/:id')
-.get(problemController.getProblem)
-.patch(problemController.updateProblem)
-.delete(problemController.deleteProblem);
+.patch(authController.protect, problemController.editProblemUpdate, problemController.updateProblem)
+.delete(authController.protect, problemController.deleteProblem);
+//.get(problemController.getProblem)
 
 
 module.exports = router;
