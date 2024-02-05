@@ -43,11 +43,7 @@ const problemSchema = new mongoose.Schema({
         required: [true, 'A problem must have a name']
     },
     brief: String,
-    verdict: String,
-    hints: [{
-        type: mongoose.Types.ObjectId,
-        ref: 'Hint'
-    }]
+    verdict: String
 });
 
 module.exports = mongoose.model('Problem', problemSchema);

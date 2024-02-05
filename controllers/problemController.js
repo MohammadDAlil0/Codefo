@@ -1,7 +1,9 @@
 const axios = require('axios');
 
 const Problem = require('../models/problemModel');
+const Memento = require('../models/mementoModel');
 const User = require('../models/userModel');
+const Hint = require('../models/hintModel');
 const factory = require('./handleFactory');
 const catchAsync = require('../utils/catchAsync');
 const AppError = require('../utils/appErorr');
@@ -11,6 +13,7 @@ exports.getProblem = factory.getOne(Problem);
 //exports.getAllProblems = factory.getAll(Problem);
 exports.updateProblem = factory.updateOne(Problem); 
 exports.deleteProblem = factory.deleteOne(Problem);
+exports.saveMemento = factory.createOne(Memento);
 
 exports.getUserProblems = catchAsync(async (req, res, next) => {
     const userId = req.params.userId;
@@ -98,4 +101,25 @@ exports.editProblemUpdate = catchAsync(async (req, res, next) => {
         tags: req.body.tags
     };
     next();
+});
+
+exports.getMyMementos = catchAsync(async (req, res, next) => {
+    const mementos = await Memento.find({userId: req.user.id}).populate('hints');
+    await Promise.all(
+        mementos.map(async memento => {
+            let lastHint, mx;
+            if(memento.hints.length) {
+                mx = Math.max(...memento.hints.map(el => el.createdAt));
+            }
+            if (!mx) mx = 0;
+            lastHint = await Hint.findOne({problemId: memento.problemId, createdAt: {$gt: mx}});
+            if(lastHint) memento.hints.push(lastHint._id);
+        })
+    );
+
+    res.status(200).json({
+        status: "success",
+        result: mementos.length,
+        data: mementos
+    });
 });

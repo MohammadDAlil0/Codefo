@@ -51,9 +51,8 @@ app.use(xss());
 //4 Routes
 app.use('/api/v1/users', userRouter);
 app.use('/api/v1/problems', problemRouter);
-app.use('/api/v1/hint', hintRouter);
+app.use('/api/v1/hints', hintRouter);
 
 app.use(errorController);
-
 
 module.exports = app;

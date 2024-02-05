@@ -13,6 +13,11 @@ exports.idToParams = (req, res, next) => {
     next();
 }
 
+exports.idToBody = (req, res, next) => {
+    req.body.userId = req.user.id;
+    next();
+}
+
 exports.validateUpdateUserInput = (req, res, next) => {
     req.body = {
         name: req.body.name,
