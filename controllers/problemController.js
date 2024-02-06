@@ -113,7 +113,7 @@ exports.getMyMementos = catchAsync(async (req, res, next) => {
             }
             if (!mx) mx = 0;
             lastHint = await Hint.findOne({problemId: memento.problemId, createdAt: {$gt: mx}});
-            if(lastHint) memento.hints.push(lastHint._id);
+            if(lastHint)memento.hints.push(lastHint._id);
         })
     );
 
@@ -121,5 +121,34 @@ exports.getMyMementos = catchAsync(async (req, res, next) => {
         status: "success",
         result: mementos.length,
         data: mementos
+    });
+});
+
+exports.getProblemSet = catchAsync(async (req, res, next) => {
+
+});
+
+exports.voteForProblem = catchAsync(async (req, res, next) => {
+    const problemId = req.body.problemId;
+    const state = req.body.state;
+
+    await Problem.findOneAndUpdate({_id: problemId}, {
+        $pull: {votes: {'_id': req.user.id}}
+    });
+    const newProblem = await Problem.findByIdAndUpdate(problemId, {
+        $push: {votes: {
+            _id: req.user.id,
+            state
+        }}
+    }, {
+        runValidators: true,
+        new: true
+    });
+
+    newProblem.updateTotalVotes();
+
+    res.status(200).json({
+        status: "success",
+        data: newProblem
     });
 });

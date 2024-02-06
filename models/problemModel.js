@@ -28,9 +28,16 @@ const problemSchema = new mongoose.Schema({
         type: Boolean,
         required: [true, 'A problem\'s folder must have a visibilty']
     },
+    totalVotes: {
+        type: Number,
+        default: 0
+    },
     votes: [{
-        type: mongoose.Types.ObjectId,
-        ref: 'User'
+        _id: {
+            type: mongoose.Types.ObjectId,
+            ref: 'User'
+        },
+        state: Number
     }],
     tags: [{
         type: String,
@@ -45,5 +52,15 @@ const problemSchema = new mongoose.Schema({
     brief: String,
     verdict: String
 });
+
+
+problemSchema.methods.updateTotalVotes = function() {
+    let sum = 0;
+    this.votes.forEach(v => {
+        sum += v.state > 0 ? 1 : -1;
+    });
+
+    this.totalVotes = sum;
+};
 
 module.exports = mongoose.model('Problem', problemSchema);

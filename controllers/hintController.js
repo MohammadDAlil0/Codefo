@@ -36,12 +36,12 @@ exports.buyHint = catchAsync(async (req, res, next) => {
     const hintId = req.params.hintId;
     const mementoId = req.body.mementoId;
     const hint = await Hint.findById(hintId);
-    console.log(hint);
-    await User.findByIdAndUpdate(req.body.id, {
+    await User.findByIdAndUpdate(req.user.id, {
         $inc: {spentPoints: hint.price}
     });
     const newMemento = await Memento.findByIdAndUpdate(mementoId, {
-        $push: {hints: hintId}
+        $push: {hints: hintId},
+        $inc: {totalPaid: hint.price}
     }, {
         new: true
     });
