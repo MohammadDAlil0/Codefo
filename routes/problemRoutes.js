@@ -19,7 +19,7 @@ router.route('/:id')
 router.put('/saveMemento', authController.protect, userController.idToBody, problemController.saveMemento);
 router.get('/getMyMementos', authController.protect, problemController.getMyMementos);
 
-router.get('/problemSet', problemController.getProblemSet);
+router.get('/problemset', authController.isLoggedIn, problemController.getProblemSet);
 
 router.put('/voteForProblem', authController.protect, problemController.voteForProblem);
 

@@ -1,8 +1,9 @@
 const mongoose = require('mongoose');
 const validator = require('validator');
 const bcrypt = require('bcrypt');
+const crypto = require('crypto');
 
-const userSchema = new mongoose.Schema({
+const userShcema = new mongoose.Schema({
     handle: {
         type: String,
         unique: true,
@@ -48,7 +49,9 @@ const userSchema = new mongoose.Schema({
     email: {
         type: String,
         lowercase: true,
-        validate: [validator.isEmail, 'Please provide a valid email']
+        required: [true, 'A user must have an email'],
+        validate: [validator.isEmail, 'Please provide a valid email'],
+        unique: true
     },
     socialMediaAccounts: [{
         site: {
@@ -71,38 +74,24 @@ const userSchema = new mongoose.Schema({
     friends: [{
         type: mongoose.Schema.ObjectId,
         ref: 'User'
-    }],
-    active: {
-        type: Boolean,
-        default: true,
-        select: false
-    }
+    }]
 });
 
-userSchema.pre('save', async function(next) {
+userShcema.pre('save', async function(next) {
     if (!this.isModified('password')) return next();
     this.password = await bcrypt.hash(this.password, 12);
     this.passwordConfirm = undefined;
     next();
 });
 
-userSchema.pre(/^find/, function(next) {
-    this.find({active: {$ne: false}});
-    next();
-});
+userShcema.methods.createPasswordResetToken = function() {
+    const resetToken = crypto.randomBytes(32).toString('hex');
 
-/*
-userSchema.post('find', function(docs, next) {
-    if (Array.isArray(docs)) {
-        docs.forEach(user => {
-            if (user.folders.length) {
-                user.folders = user.folders.filter(el => el.visibilty);
-            }
-        });
-    }
-    next();
-});
-*/
+    this.passwordResetToken = crypto.createHash('sha256').update(resetToken).digest('hex');
+    this.passwordResetExpires = Date.now() + 1000 * 60 * 10;
+
+    return resetToken;
+}
 
 
-module.exports = mongoose.model('User', userSchema);
+module.exports = mongoose.model('User', userShcema);

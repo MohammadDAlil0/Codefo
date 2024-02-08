@@ -54,13 +54,14 @@ const problemSchema = new mongoose.Schema({
 });
 
 
-problemSchema.methods.updateTotalVotes = function() {
+problemSchema.methods.updateTotalVotes = async function() {
     let sum = 0;
     this.votes.forEach(v => {
         sum += v.state > 0 ? 1 : -1;
     });
 
     this.totalVotes = sum;
+    await this.save();
 };
 
 module.exports = mongoose.model('Problem', problemSchema);

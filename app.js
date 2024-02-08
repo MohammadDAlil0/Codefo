@@ -1,4 +1,4 @@
-//1 packages
+//1 Packages
 const express = require('express');
 const morgan = require('morgan');
 const helmet = require('helmet');
@@ -6,20 +6,20 @@ const rateLimiter = require('express-rate-limit');
 const mongoSanitize = require('express-mongo-sanitize');
 const xss = require('xss-clean');
 
-//1.1 routes
+//2 Get Routes
 const userRouter = require('./routes/userRoutes');
 const problemRouter = require('./routes/problemRoutes');
 const hintRouter = require('./routes/hintRoutes');
 
-//1.2 Controllers
+//3 Controllers
 const errorController = require('./controllers/errorController');
 
-//2 const variables
+//4 Const Variables
 const app = express();
 
-//3 midlewares
+//5 Midlewares
 
-//midlewares for testing
+//Midlewares for testing
 if (process.env.NODE_ENV === 'development') {
     app.use(morgan('dev'));
     app.use((req, res, next) => {
@@ -28,7 +28,7 @@ if (process.env.NODE_ENV === 'development') {
     });
 }
 
-//midleware to secure the express app
+//Midleware to secure the express app
 app.use(helmet());
 
 //Limit requests from same IP
@@ -39,7 +39,7 @@ const limiter = rateLimiter({
 });
 app.use('/api', limiter);
 
-//body parser
+//Body parser
 app.use(express.json({limit: '10KB'}));
 
 //Data sanitizaion NoSQL query injection
@@ -48,7 +48,7 @@ app.use(mongoSanitize());
 //Data sanitization against xss
 app.use(xss());
 
-//4 Routes
+//6 Routers
 app.use('/api/v1/users', userRouter);
 app.use('/api/v1/problems', problemRouter);
 app.use('/api/v1/hints', hintRouter);

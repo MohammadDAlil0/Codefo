@@ -7,6 +7,7 @@ const Hint = require('../models/hintModel');
 const factory = require('./handleFactory');
 const catchAsync = require('../utils/catchAsync');
 const AppError = require('../utils/appErorr');
+const APIFeatures = require('../utils/apiFeatures');
 
 exports.createProblem = factory.createOne(Problem)
 exports.getProblem = factory.getOne(Problem);
@@ -125,7 +126,24 @@ exports.getMyMementos = catchAsync(async (req, res, next) => {
 });
 
 exports.getProblemSet = catchAsync(async (req, res, next) => {
+    let filter = {};
+    if (req.user) filter = {userId: req.user.id}
+    req.query = {
+        sort: '-totalVotes'
+    };
+    const freatures = new APIFeatures(Problem.find(filter), req.query)
+    .filter()
+    .sort()
+    .limitFields()
+    .pagination();
+    
+    const problems = await freatures.query;
 
+    res.status(200).json({
+        status: 'success',
+        result: problems.length,
+        data: problems
+    });
 });
 
 exports.voteForProblem = catchAsync(async (req, res, next) => {
