@@ -13,15 +13,15 @@ router.route('/me')
 .get(authController.protect, problemController.getMyProblems);
 
 router.route('/:id')
-.patch(authController.protect, problemController.editProblemUpdate, problemController.updateProblem)
+.patch(authController.protect, problemController.updateProblem)
 .delete(authController.protect, problemController.deleteProblem);
 
 router.put('/saveMemento', authController.protect, userController.idToBody, problemController.saveMemento);
 router.get('/getMyMementos', authController.protect, problemController.getMyMementos);
 
-router.get('/problemset', authController.isLoggedIn, problemController.getProblemSet);
-
 router.put('/voteForProblem', authController.protect, problemController.voteForProblem);
+
+router.get('/problemset', authController.isLoggedIn, problemController.getProblemSet);
 
 
 module.exports = router;

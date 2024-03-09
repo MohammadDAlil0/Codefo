@@ -31,7 +31,7 @@ exports.validateUpdateUserInput = (req, res, next) => {
 
 exports.getAllUsers = catchAsync(async (req, res, next) => {
     const users = await User.find();
-    users.forEach(user => user.folders = undefined);
+    users.forEach(user => user.folders = user.friends = undefined);
     res.status(200).json({
         status: 'success',
         result: users.length,
@@ -42,7 +42,7 @@ exports.getAllUsers = catchAsync(async (req, res, next) => {
 exports.getUser = catchAsync(async (req, res, next) => {
     const doc = await User.findOne({handle: req.params.handle});
     if (!doc) {
-        return next(new AppError('No document found with that ID', 404));
+        return next(new AppError('No document found with that handle', 404));
     }   
     doc.folders = doc.folders.filter(f => f.visibilty);
     
@@ -57,8 +57,8 @@ exports.addFolder = catchAsync(async (req, res, next) => {
         name: req.body.name,
         visibilty: req.body.visibilty
     };
-    if (!doc.name) {
-        return next(new AppError('A folder must have a name'), 400);
+    if (!doc.name || !(doc.visibilty === false || doc.visibilty === true)) {
+        return next(new AppError('A folder must have a name and visibilty'), 400);
     }
     const isExist = req.user.folders.some(el => el.name === doc.name);
     if(isExist) {
@@ -77,8 +77,13 @@ exports.addFolder = catchAsync(async (req, res, next) => {
 
 exports.editFolder = catchAsync(async (req, res, next) => {
     const {oldName, name, visibilty} = req.body;
-    if (!name) {
-        return next(new AppError('A folder must have a name'), 400);
+    if (!oldName || !name || (visibilty !== true && visibilty !== false)) {
+        return next(new AppError('Be sure Entering valid oldName, name, and visibilty'), 400);
+    }
+
+    const isExist = req.user.folders.some(el => el.name === name);
+    if(isExist) {
+        return next(new AppError('this folder is already exist', 400));
     }
     
     const newUser = await User.findOneAndUpdate({_id: req.user.id, 'folders.name': oldName}, {
@@ -99,6 +104,17 @@ exports.editFolder = catchAsync(async (req, res, next) => {
     res.status(200).json({
         status: 'success',
         data: newUser.folders
+    });
+});
+
+exports.deleteFolder = catchAsync(async (req, res, next) => {
+    const folderName = req.body.folderName;
+    req.user.folders = req.user.folders.filter(el => el.name !== folderName);
+    await req.user.save({validateBeforeSave: false});
+    await Problem.deleteMany({userId: req.user.id, folderName: folderName});
+    res.status(204).json({
+        status: 'success',
+        data: null
     });
 });
 

@@ -7,6 +7,7 @@ const catchAsync = require('../utils/catchAsync');
 const User = require('../models/userModel');
 const AppError = require('../utils/appErorr');
 const sendEmail = require('../utils//email');
+const resetPasswordEmail = require('../public/forgotPassword');
 
 const signToken = id => jwt.sign({id: id}, process.env.JWT_SECRET, {expiresIn: process.env.JWT_EXPIRE_IN});
 
@@ -26,7 +27,22 @@ exports.signup = catchAsync(async (req, res, next) => {
     if (codeforcesUser.data.status !== 'OK') {
         return next(new AppError('Please provide a valid Codeforces\' handle', 403));
     }
-    const newUser = await User.create({ handle, password, passwordConfirm, name, email });
+    
+    let result = await axios.get(`https://codeforces.com/api/user.status?handle=${handle}`);
+    let curProblem = {}, points = 0;
+    //Search inside my submissions
+    result.data.result.forEach(el => {
+        if (el.verdict === 'OK' && !curProblem[`${el.problem.contestId}${el.problem.index}`]) {
+            if (!el.problem.rating) {
+                el.problem.rating = 0;
+            }
+            points += el.problem.rating;
+            curProblem[`${el.problem.contestId}${el.problem.index}`] = 1;
+        }
+    });
+    const {city, country, rating, avatar} = codeforcesUser.data.result[0];
+    const newUser = (await User.create({ handle, password, passwordConfirm, name, email, points, country, city, rating, picture: avatar, solvedProblems: Object.keys(curProblem).length }));
+    newUser.password = newUser.spentPoints = newUser.followers = newUser.friends = newUser.folders = newUser.socialMediaAccounts = undefined;
     createSendToken(newUser, 201, res);
 });
 
@@ -40,6 +56,7 @@ exports.login = catchAsync(async (req, res, next) => {
     if (!curUser || !await bcrypt.compare(password, curUser.password)) {
         return next(new AppError('Incorrect handle or password!', 404));
     }
+    curUser.password = curUser.passwordChangedAt = undefined;
     createSendToken(curUser, 200, res);
 });
 
@@ -94,9 +111,8 @@ exports.forgotPassword = catchAsync(async (req, res, next) => {
     
     const resetURL = `${req.protocol}://${req.get('host')}/api/v1/users/resetPassword/${resetToken}`;
 
-    const message = `Forgot your password? Submit a patch request with a newPassword and confirm password 
-    to: ${resetURL}.\nIf your didn't forgot your password. Please ignore thie email`;
-    console.log(user);
+    const message = resetPasswordEmail.replace('{{resetURL}}', resetURL);
+    
     try {
         await sendEmail({
             email: user.email,

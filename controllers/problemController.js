@@ -11,22 +11,38 @@ const APIFeatures = require('../utils/apiFeatures');
 
 exports.createProblem = factory.createOne(Problem)
 exports.getProblem = factory.getOne(Problem);
-//exports.getAllProblems = factory.getAll(Problem);
-exports.updateProblem = factory.updateOne(Problem); 
 exports.deleteProblem = factory.deleteOne(Problem);
 exports.saveMemento = factory.createOne(Memento);
+
+exports.updateProblem = catchAsync(async (req, res, next) => {
+    const doc = await Problem.findOneAndUpdate({_id: req.params.id, userId: req.user.id}, {
+        name: req.body.name,
+        brief: req.body.brief,
+        tags: req.body.tags
+    }, {
+        new: true,
+        runValidators: true
+    });
+    if (!doc) {
+        return next(new AppError('No problem found with that ID', 404));
+    }
+    res.status(200).json({
+        status: 'success',
+        data: doc
+    });
+});
 
 exports.getUserProblems = catchAsync(async (req, res, next) => {
     const userId = req.params.userId;
     const folderName = req.body.folderName;
-    
-    const docs = await Problem.findOne({userId: userId, folderName: folderName, folderVisibilty: true});
+    const docs = await Problem.find({userId: userId, folderName: folderName, folderVisibilty: true});
     if (!docs) {
-        return next(new AppError('UserId or folderName seem to be not correct', 400));
+        return next(new AppError('There are no problems for this user\'s folder', 400));
     }
 
     res.status(200).json({
         status: 'success',
+        result: docs.length,
         data: docs
     });
 });
@@ -51,10 +67,8 @@ exports.getMyProblems = catchAsync(async (req, res, next) => {
 
 exports.editProblemInput = catchAsync(async (req, res, next) => {
     const contestId = req.body.contestId;
-    const problemNumber = req.body.problemId;
-
+    const problemNumber = req.body.problemNumber;
     let result = await axios.get(`https://codeforces.com/api/contest.status?contestId=${contestId}&handle=${req.user.handle}&&from=1&count=100`);
-
     let curProblem;
     //Search inside my submissions
     result.data.result.forEach(el => {
@@ -68,8 +82,7 @@ exports.editProblemInput = catchAsync(async (req, res, next) => {
         }
     });
     if (!curProblem) { //It's not in my submissions then search for the problem
-        result = await axios.get(`https://codeforces.com/api/contest.standings?contestId=${contestId}&from=1&count=0&showUnofficial=true`);
-
+        result = await axios.get(`https://codeforces.com/api/contest.standings?contestId=${contestId}&from=1&count=1&showUnofficial=true`);
         curProblem = result.data.result.problems.find(el => el.index === problemNumber);
         if (!curProblem) {
             return next(new AppError('There is no such problem', 400));
@@ -89,19 +102,10 @@ exports.editProblemInput = catchAsync(async (req, res, next) => {
     req.body.rating = curProblem.rating;
     req.body.userId = req.user.id;
     req.body.userName = req.user.name;
-    req.body.votes = req.body.hints = undefined;
+    req.body.totalVotes = req.body.votes = req.body.hints = undefined;
     
     next();
 
-});
-
-exports.editProblemUpdate = catchAsync(async (req, res, next) => {
-    req.body = {
-        name: req.body.name,
-        brief: req.body.brief,
-        tags: req.body.tags
-    };
-    next();
 });
 
 exports.getMyMementos = catchAsync(async (req, res, next) => {
@@ -110,10 +114,10 @@ exports.getMyMementos = catchAsync(async (req, res, next) => {
         mementos.map(async memento => {
             let lastHint, mx;
             if(memento.hints.length) {
-                mx = Math.max(...memento.hints.map(el => el.createdAt));
+                mx = Math.max(...memento.hints.map(el => el.order));
             }
             if (!mx) mx = 0;
-            lastHint = await Hint.findOne({problemId: memento.problemId, createdAt: {$gt: mx}});
+            lastHint = await Hint.findOne({problemId: memento.problemId, order: {$gt: mx}});
             if(lastHint)memento.hints.push(lastHint._id);
         })
     );
@@ -127,16 +131,22 @@ exports.getMyMementos = catchAsync(async (req, res, next) => {
 
 exports.getProblemSet = catchAsync(async (req, res, next) => {
     let filter = {};
-    if (req.user) filter = {userId: req.user.id}
-    req.query = {
-        sort: '-totalVotes'
-    };
+    if (req.user) {
+        if (req.query.friends) {
+            console.log(req.user);
+            filter = {userId: {$in: req.user.friends}, folderVisibilty: true};
+            req.query.friends = undefined;
+        } else {
+            filter = {userId: {$ne: req.user.id}, folderVisibilty: true};
+        }
+    }
+        
     const freatures = new APIFeatures(Problem.find(filter), req.query)
     .filter()
     .sort()
     .limitFields()
     .pagination();
-    
+
     const problems = await freatures.query;
 
     res.status(200).json({

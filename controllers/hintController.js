@@ -13,12 +13,11 @@ exports.updateHint = factory.updateOne(Hint);
 exports.deleteHint = factory.deleteOne(Hint);
 
 exports.getMyHints = catchAsync(async (req, res, next) => {
-    let problem = Problem.findOne({_id: req.body.problemId, userId: req.user.id});
-    if (!problem) {
-        return next(AppError('No problem match with this user!', 404));
-    }
     const docs = await Hint.find({problemId: req.body.problemId});
-
+    const problem = await Problem.findById(docs[0].problemId);
+    if (!docs.length || problem.userId.toString() !== req.user.id) {
+        return next(new AppError('No problem match with this user!', 404));
+    }
     res.status(200).json({
         status: 'success',
         result: docs.length,
@@ -26,24 +25,21 @@ exports.getMyHints = catchAsync(async (req, res, next) => {
     });
 });
 
-exports.getAvailableHints = catchAsync(async (req, res, next) => {
-    const problemId = req.params.problemId;
-    const userId = req.body.id;
-    
-});
-
 exports.buyHint = catchAsync(async (req, res, next) => {
     const hintId = req.params.hintId;
     const mementoId = req.body.mementoId;
     const hint = await Hint.findById(hintId);
-    await User.findByIdAndUpdate(req.user.id, {
-        $inc: {spentPoints: hint.price}
-    });
     const newMemento = await Memento.findByIdAndUpdate(mementoId, {
         $push: {hints: hintId},
         $inc: {totalPaid: hint.price}
     }, {
         new: true
+    });
+    if (!newMemento) {
+        return next(new AppError('There is no memento for that ID', 400));
+    }
+    await User.findByIdAndUpdate(req.user.id, {
+        $inc: {spentPoints: hint.price}
     });
     res.status(200).json({
         status: 'success',

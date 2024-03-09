@@ -7,7 +7,7 @@ const userShcema = new mongoose.Schema({
     handle: {
         type: String,
         unique: true,
-        required: [true, 'A user must has a Codeforces\' handle!']
+        required: [true, 'A user must have a Codeforces\' handle!']
     },
     password: {
         type: String,
@@ -25,17 +25,30 @@ const userShcema = new mongoose.Schema({
             message: "passwords are not the same!"
         }
     },
-    passwordChangedAt: Date,
-    passwordResetToken: String,
-    passwordResetExpires: Date,
+    passwordChangedAt: {
+        type: Date,
+        select: false
+    },
+    passwordResetToken: {
+        type: String,
+        select: false
+    },
+    passwordResetExpires: {
+        type: Date,
+        select: false
+    },  
     name: {
         type: String,
-        required: [true, 'A user must has a name!'],
-        lowercase: true
+        required: [true, 'A user must have a name!']
     },
     picture: String,
-    rate: Number,
+    rating: Number,
     points: Number,
+    lastUpdatedPoints: {
+        type: Number,
+        default: 0,
+        select: false
+    },
     spentPoints: {
         type: Number,
         default: 0
@@ -74,7 +87,9 @@ const userShcema = new mongoose.Schema({
     friends: [{
         type: mongoose.Schema.ObjectId,
         ref: 'User'
-    }]
+    }],
+    country: String,
+    city: String
 });
 
 userShcema.pre('save', async function(next) {
@@ -91,7 +106,7 @@ userShcema.methods.createPasswordResetToken = function() {
     this.passwordResetExpires = Date.now() + 1000 * 60 * 10;
 
     return resetToken;
-}
+};
 
 
 module.exports = mongoose.model('User', userShcema);

@@ -1,13 +1,15 @@
 const mongoose = require('mongoose');
+const Memento = require('./mementoModel');
+const Hint = require('./hintModel');
 
-const problemTags = ['DP', 'Greedy', 'Graph', 'Data Structures', 'Strings', 'Number Theory', 'Divide and Conquer', 'Binary Search', 'Backtracking', 'Geometry', 'Bit Manipulation', 'Network Flow', 'Combinatorics', 'Mathematics', 'Game Theory', 'Simulation', 'DP on Trees', 'Segment Trees', 'Disjoint Set Union', 'Topological Sorting', 'Shortest Paths', 'Minimum Spanning Tree', 'Hashing', 'Trie', 'Suffix Array', 'Two Pointers', 'Knapsack', 'Meet in the Middle', 'Compressed Data Structures', 'Heavy-Light Decomposition', 'Centroid Decomposition', 'Matrix Exponentiation', 'Convex Hull', 'Sweep Line', 'Randomized Algorithms', 'Approximation Algorithms', 'String Matching', 'Computational Geometry'];
+const problemTags = ['implementation', 'math', 'greedy', 'dp', 'data structures', 'brute force', 'constructive algorithms', 'graphs', 'sortings', 'binary search', 'dfs and similar', 'trees', 'strings', 'number theory', 'combinatorics', 'special', 'geometry', 'bitmasks', 'two pointers', 'dsu', 'shortest paths', 'probabilities', 'divide and conquer', 'hashing games', 'flows', 'interactive', 'matrices', 'string suffix structures', 'fft', 'graph matchings', 'ternary search', 'expression parsing', 'meet-in-the-middle', '2-sat', 'chinese remainder theorem', 'schedules'];
 
 const problemSchema = new mongoose.Schema({
     contestId: {
         type: String,
         required: [true, 'A problem must have an contest ID']
     },
-    problemId: {
+    problemNumber: {
         type: String,
         required: [true, 'A problem must have an ID']
     },
@@ -18,11 +20,11 @@ const problemSchema = new mongoose.Schema({
     },
     userName: {
         type: String,
-        required: [true, 'A problem must belongs to a user']
+        required: [true, 'A problem must belong to a user']
     },
     folderName: {
         type: String,
-        required: [true, 'A problem must belongs to a folder']
+        required: [true, 'A problem must belong to a folder']
     },
     folderVisibilty: {
         type: Boolean,
@@ -42,7 +44,8 @@ const problemSchema = new mongoose.Schema({
     tags: [{
         type: String,
         enum: problemTags,
-        message: `A tag should be one of these tags: ${problemTags}`
+        message: `A tag should be one of these tags: ${problemTags}`,
+        lowercase: true
     }],
     rating: Number,
     name: {
@@ -63,5 +66,12 @@ problemSchema.methods.updateTotalVotes = async function() {
     this.totalVotes = sum;
     await this.save();
 };
+
+problemSchema.pre(/^delete/, async function(next) {
+    const folderName = this.getQuery().folderName;
+    const problemsId = await mongoose.model('Problem').find({folderName: folderName}).select('_id');
+    await Hint.deleteMany({problemId: {$in: problemsId}});
+    await Memento.deleteMany({problemId: {$in: problemsId}});
+});
 
 module.exports = mongoose.model('Problem', problemSchema);

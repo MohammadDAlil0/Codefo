@@ -17,14 +17,14 @@ router.use(authController.protect);
 
 router.route('/me')
 .get(userController.idToParams, userController.getMe)
-.patch(userController.idToParams, userController.validateUpdateUserInput, userController.updateUser)
-.delete(userController.idToParams, userController.deleteUser);
+.patch(userController.idToParams, userController.validateUpdateUserInput, userController.updateUser);
 
-router.post('/folder', userController.addFolder);
-router.patch('/folder', userController.editFolder);
+router.route('/folder')
+.post(userController.addFolder)
+.patch(userController.editFolder)
+.delete(userController.deleteFolder);
 
 router.put('/addFriend/:friendId', userController.addFriend);
 router.delete('/deleteFriend/:friendId', userController.deleteFriend);
-
 
 module.exports = router;

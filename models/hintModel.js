@@ -12,11 +12,23 @@ const hintSchema = new mongoose.Schema({
         type: Number,
         required: [true, 'A hint must have a price']
     },
-    createdAt: {
-        type: Date,
-        default: Date.now(),
-        select: true
-    }
+    order: Number
 });
+
+hintSchema.pre('save', async function(next) {
+    const doc = this;
+    if (doc.isNew) {
+        try {
+            const maxOrder = await mongoose.model('Hint').find().sort({ order: -1 }).limit(1);
+            doc.order = maxOrder.length > 0 ? maxOrder[0].order + 1 : 1;
+        } catch (error) {
+            console.error(error);
+            next(error);
+        }
+    }
+    next();
+});
+
+
 
 module.exports = mongoose.model('Hint', hintSchema);

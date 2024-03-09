@@ -14,11 +14,10 @@ const sendEmail = async options => {
 
     // 2) Define the email options
     const mailOptions = {
-        from: process.env.EMAIL_FROM,
+        from: `${process.env.EMAIL_FROM_NAME} <${process.env.EMAIL_FROM}>`,
         to: options.email,
         subject: options.subject,
-        text: options.message,
-        //html: 
+        html: options.message
     };
     await transporter.sendMail(mailOptions);
 }

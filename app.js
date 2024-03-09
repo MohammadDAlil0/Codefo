@@ -5,6 +5,8 @@ const helmet = require('helmet');
 const rateLimiter = require('express-rate-limit');
 const mongoSanitize = require('express-mongo-sanitize');
 const xss = require('xss-clean');
+const cron = require('node-cron');
+
 
 //2 Get Routes
 const userRouter = require('./routes/userRoutes');
@@ -13,6 +15,7 @@ const hintRouter = require('./routes/hintRoutes');
 
 //3 Controllers
 const errorController = require('./controllers/errorController');
+const updateUsers = require('./utils/updateUsers');
 
 //4 Const Variables
 const app = express();
@@ -54,5 +57,10 @@ app.use('/api/v1/problems', problemRouter);
 app.use('/api/v1/hints', hintRouter);
 
 app.use(errorController);
+/*
+cron.schedule('* * * * *', () => {
+    updateUsers();
+});
+*/
 
 module.exports = app;
