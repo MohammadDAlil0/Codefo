@@ -1,3 +1,5 @@
 node_modules
 *.env
 outReferance
+utils/test.js
+.gitignore
