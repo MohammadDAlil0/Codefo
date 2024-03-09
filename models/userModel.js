@@ -108,5 +108,17 @@ userShcema.methods.createPasswordResetToken = function() {
     return resetToken;
 };
 
+userShcema.post(/^find/, function(doc, next) {
+    if (Array.isArray(doc)) {
+        doc.forEach(el => {
+            el.points -= el.spentPoints;
+        })
+    }
+    else {
+        doc.points -= doc.spentPoints;
+    }
+    next();
+});
+
 
 module.exports = mongoose.model('User', userShcema);
