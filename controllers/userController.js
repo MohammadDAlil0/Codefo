@@ -3,6 +3,7 @@ const User = require('../models/userModel');
 const Problem = require('../models/problemModel');
 const catchAsync = require('../utils/catchAsync');
 const AppError = require('../utils/appErorr');
+const APIFeatures = require('../utils/apiFeatures');
 
 exports.getMe = factory.getOne(User);
 exports.updateUser = factory.updateOne(User);
@@ -29,8 +30,14 @@ exports.validateUpdateUserInput = (req, res, next) => {
     next();
 }
 
-exports.getAllUsers = catchAsync(async (req, res, next) => {
-    const users = await User.find();
+exports.getAllUsers = catchAsync(async (req, res, next) => {    
+    const freatures = new APIFeatures(User.find(), req.query)
+    .filter()
+    .sort()
+    .limitFields()
+    .pagination();
+
+    const users = await freatures.query;
     users.forEach(user => user.folders = user.friends = undefined);
     res.status(200).json({
         status: 'success',

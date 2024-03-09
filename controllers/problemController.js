@@ -133,7 +133,6 @@ exports.getProblemSet = catchAsync(async (req, res, next) => {
     let filter = {};
     if (req.user) {
         if (req.query.friends) {
-            console.log(req.user);
             filter = {userId: {$in: req.user.friends}, folderVisibilty: true};
             req.query.friends = undefined;
         } else {
