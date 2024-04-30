@@ -42,7 +42,7 @@ exports.signup = catchAsync(async (req, res, next) => {
     });
     const {city, country, rating, avatar} = codeforcesUser.data.result[0];
     const newUser = (await User.create({ handle, password, passwordConfirm, name, email, points, country, city, rating, picture: avatar, solvedProblems: Object.keys(curProblem).length }));
-    newUser.password = newUser.spentPoints = newUser.followers = newUser.friends = newUser.folders = newUser.socialMediaAccounts = undefined;
+    newUser.password = newUser.spentPoints = newUser.followers = newUser.friends = newUser.folders = newUser.socialMediaAccounts = newUser.lastDayPonints = newUser.lastWeekPoints = newUser.lastMonthPoints = newUser.lastYearPoints = undefined;
     createSendToken(newUser, 201, res);
 });
 

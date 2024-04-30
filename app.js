@@ -7,11 +7,11 @@ const mongoSanitize = require('express-mongo-sanitize');
 const xss = require('xss-clean');
 const cron = require('node-cron');
 
-
 //2 Get Routes
 const userRouter = require('./routes/userRoutes');
 const problemRouter = require('./routes/problemRoutes');
 const hintRouter = require('./routes/hintRoutes');
+const contestRouter = require('./routes/contestRoutes');
 
 //3 Controllers
 const errorController = require('./controllers/errorController');
@@ -55,12 +55,14 @@ app.use(xss());
 app.use('/api/v1/users', userRouter);
 app.use('/api/v1/problems', problemRouter);
 app.use('/api/v1/hints', hintRouter);
+app.use('/api/v1/contest', contestRouter);
 
 app.use(errorController);
-/*
+
+//Updating a user points every 30 seconds 
 cron.schedule('* * * * *', () => {
     updateUsers();
 });
-*/
+
 
 module.exports = app;

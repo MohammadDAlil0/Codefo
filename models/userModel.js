@@ -49,6 +49,11 @@ const userShcema = new mongoose.Schema({
         default: 0,
         select: false
     },
+    lastTypePoints: [{
+        type: Number,
+        default: [0, 0, 0, 0],
+        select: false
+    }],
     spentPoints: {
         type: Number,
         default: 0
