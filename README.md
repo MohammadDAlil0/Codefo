@@ -1,6 +1,6 @@
 # Codefo Project
 
-This project provides services for Competitive Programmers allowing them to manage theirs favorite problems, storing them in nice folders, publish them to the others, and much more. Also, the project contains varios tools which be heplful for them such as Graph editor, tools for testing, competitve contests, and even more. 
+This project provides services for Competitive Programmers, allowing them to manage their favorite problems, store them in organized folders, publish them to others, and more. Additionally, the project includes various tools that are helpful for programmers, such as a Graph editor, testing tools, competitive contests, and more.
 
 ## Table of Contents
 
